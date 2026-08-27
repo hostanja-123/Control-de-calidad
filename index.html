@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Calidad">
+<link rel="apple-touch-icon" href="icon.jpg">
+<link rel="manifest" href="manifest.json">
+<title>Control de Calidad</title>
+
+<style>
+:root{
+  --green:#1f5a39;
+  --light:#f4f7f2;
+  --line:#dfe7dc;
+  --text:#173326;
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:var(--light);
+  color:var(--text);
+}
+
+header{
+  background:var(--green);
+  color:white;
+  position:sticky;
+  top:0;
+  z-index:3;
+  padding:calc(env(safe-area-inset-top) + 10px) 14px 12px;
+}
+
+.headrow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.iconbtn{
+  width:34px;
+  height:34px;
+  border:0;
+  background:none;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  flex:0 0 auto;
+  position:relative;
+}
+
+.iconbtn svg{
+  width:22px;
+  height:22px;
+}
+
+.admindot{
+  position:absolute;
+  top:4px;
+  right:4px;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#7bd68a;
+  border:1.5px solid var(--green);
+}
+
+h1{
+  font-size:19px;
+  margin:0;
+  font-weight:700;
+  text-align:center;
+  flex:1;
+}
+
+.sub{
+  font-size:13px;
+  color:#cfe0d3;
+  text-align:center;
+  margin-top:2px;
+}
+
+.searchwrap{
+  margin-top:10px;
+}
+
+.searchwrap input{
+  width:100%;
+  padding:9px 12px;
+  border-radius:10px;
+  border:0;
+  font:inherit;
+}
+
+main{
+  max-width:700px;
+  margin:auto;
+  padding:18px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+.tile{
+  background:white;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:18px 10px 14px;
+  text-align:center;
+  cursor:pointer;
+  box-shadow:0 2px 10px #0000000a;
+  position:relative;
+}
+
+.tile .icon{
+  width:64px;
+  height:64px;
+  border-radius:16px;
+  margin:0 auto 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  font-weight:800;
+  color:white;
+  overflow:hidden;
+}
+
+.tile .icon img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.tile .name{
+  font-size:14px;
+  font-weight:650;
+}
+
+.tile .tilebtn-pencil{
+  position:absolute;
+  top:8px;
+  left:8px;
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  background:#00000010;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  color:#5c6d61;
+}
+
+.tile .tilebtn-trash{
+  position:absolute;
+  top:8px;
+  right:8px;
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  background:#00000010;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  color:#b23b3b;
+}
+
+.tile.add{
+  border:1.5px dashed #b9c7bd;
+  background:transparent;
+  box-shadow:none;
+  color:#5c6d61;
+}
+
+.tile.add .icon{
+  background:transparent;
+  color:#5c6d61;
+  font-size:30px;
+  border:1.5px dashed #b9c7bd;
+}
+
+.card,
+.client{
+  background:white;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:18px;
+  margin-bottom:14px;
+  box-shadow:0 2px 10px #0000000a;
+}
+
+.choice{
+  cursor:pointer;
+  position:relative;
+}
+
+.choice h2{
+  margin:0 0 5px;
+  font-size:21px;
+}
+
+.choice .del{
+  position:absolute;
+  top:14px;
+  right:16px;
+  font-size:13px;
+  font-weight:600;
+  color:#b23b3b;
+}
+
+.via{
+  color:#6a796f;
+  font-size:14px;
+}
+
+.back{
+  border:0;
+  background:none;
+  font-size:16px;
+  color:var(--green);
+  padding:0 0 12px;
+  cursor:pointer;
+}
+
+.row{
+  padding:14px 0;
+  border-bottom:1px solid var(--line);
+}
+
+.row:last-child{
+  border-bottom:0;
+}
+
+.label{
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:#6a796f;
+  font-weight:700;
+}
+
+.value{
+  font-size:18px;
+  margin-top:5px;
+  white-space:pre-wrap;
+}
+
+.clickable{
+  cursor:pointer;
+}
+
+.hint{
+  font-size:12px;
+  color:#87958c;
+  margin-top:5px;
+}
+
+button{
+  font:inherit;
+}
+
+.primary{
+  width:100%;
+  border:0;
+  border-radius:13px;
+  padding:13px;
+  background:var(--green);
+  color:white;
+  font-weight:700;
+  margin-top:12px;
+}
+
+.secondary{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:13px;
+  padding:12px;
+  background:white;
+  color:var(--green);
+  font-weight:650;
+  margin-top:8px;
+}
+
+input,
+textarea{
+  width:100%;
+  padding:11px;
+  border:1px solid #cfd9d1;
+  border-radius:10px;
+  font:inherit;
+  margin-top:7px;
+}
+
+textarea{
+  min-height:90px;
+}
+
+.photos{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:10px;
+}
+
+.photos img{
+  width:100%;
+  aspect-ratio:1;
+  object-fit:cover;
+  border-radius:10px;
+}
+
+.hidden{
+  display:none;
+}
+
+.note{
+  font-size:13px;
+  color:#6a796f;
+  margin:8px 0;
+}
+
+.empty{
+  text-align:center;
+  color:#87958c;
+  padding:40px 10px;
+  font-size:15px;
+  grid-column:1 / -1;
+}
+
+.banner{
+  background:#fff4e0;
+  border:1px solid #eecb8c;
+  color:#7a5b1a;
+  border-radius:12px;
+  padding:12px 14px;
+  font-size:13px;
+  margin-bottom:14px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="headrow">
+    <button class="iconbtn" id="lockBtn" onclick="lockTap()" aria-label="Admin">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <span class="admindot hidden" id="adminDot"></span>
+    </button>
+    <div>
+      <h1 id="title">Control de Calidad</h1>
+      <div class="sub" id="subtitle">Clientes</div>
+    </div>
+    <div style="display:flex;gap:2px;">
+      <button class="iconbtn" id="searchBtn" onclick="toggleSearch()" aria-label="Buscar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <button class="iconbtn hidden" id="addBtn" onclick="addTap()" aria-label="Añadir">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="searchwrap hidden" id="searchWrap">
+    <input id="searchInput" placeholder="Buscar cliente…" oninput="renderHome()">
+  </div>
+</header>
+
+<main id="app"></main>
+
+<!-- Firebase SDK (compat, geen build-tools nodig) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
+<script>
+/* =========================================================
+   FIREBASE CONFIG — vul dit morgen in nadat je stap 1 en 2
+   hebt gedaan (project + Firestore + Authentication).
+   Je vindt deze gegevens in: Firebase console → Instellingen
+   project (tandwiel) → "Configuración del proyecto" →
+   onderaan bij "Tus apps" → Web app → SDK config.
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyAPv5kDJgX9pQDfLd4POaT9RZC1zZ9Rxgg",
+  authDomain: "controldecalidad-ca7c6.firebaseapp.com",
+  projectId: "controldecalidad-ca7c6",
+  storageBucket: "controldecalidad-ca7c6.firebasestorage.app",
+  messagingSenderId: "512585153780",
+  appId: "1:512585153780:web:fddf14497415a621e672a1"
+};
+
+let fbReady = false;
+let db = null;
+let auth = null;
+
+try{
+  if(firebaseConfig.apiKey !== "TU_API_KEY"){
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    auth = firebase.auth();
+    fbReady = true;
+  }
+}catch(e){
+  console.error(e);
+}
+
+/* ---------- estado ---------- */
+
+const palette = ["#1f5a39","#b23b3b","#c98a1b","#2d5f8a","#6a4c93","#1f7a6c","#8a3b6a"];
+
+let clients = [];
+let isAdmin = false;
+let searchOpen = false;
+let currentScreen = "home";
+let unsub = null;
+
+const app = document.getElementById("app");
+const title = document.getElementById("title");
+const subtitle = document.getElementById("subtitle");
+
+const colorFor = id => {
+  let h = 0;
+  for(const ch of id) h = (h * 31 + ch.charCodeAt(0)) % palette.length;
+  return palette[h];
+};
+
+/* ---------- configuratie-waarschuwing ---------- */
+
+function notConfiguredScreen(){
+  title.textContent = "Control de Calidad";
+  subtitle.textContent = "Configuración pendiente";
+  app.innerHTML = `
+    <div class="banner">
+      La app todavía no está conectada a Firebase.<br><br>
+      Sustituye los valores <code>TU_API_KEY</code>, etc. en el
+      código (parte superior del script) por los datos reales de
+      tu proyecto de Firebase, y añade las reglas de seguridad
+      indicadas por Claude. Después recarga esta página.
+    </div>
+  `;
+}
+
+/* ---------- realtime data ---------- */
+
+function startListening(){
+  unsub = db.collection("clients").orderBy("name").onSnapshot(snap => {
+    clients = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    rerenderCurrent();
+  }, err => {
+    console.error(err);
+  });
+}
+
+function rerenderCurrent(){
+  if(currentScreen === "home") renderHome();
+  else if(currentScreen === "client") openClient(window._openClientId, true);
+  else if(currentScreen === "detail") detail(window._openClientId, window._openConfId, true);
+}
+
+/* ---------- admin login ---------- */
+
+function lockTap(){
+  if(isAdmin){
+    if(confirm("¿Cerrar sesión de administrador?")){
+      auth.signOut();
+    }
+    return;
+  }
+  loginScreen();
+}
+
+function loginScreen(){
+  currentScreen = "login";
+  document.getElementById("addBtn").classList.add("hidden");
+  document.getElementById("searchBtn").classList.add("hidden");
+
+  title.textContent = "Acceso administrador";
+  subtitle.textContent = "";
+
+  app.innerHTML = `
+    <button class="back" onclick="home()">‹ Volver</button>
+    <div class="card">
+      <label class="label">
+        Email
+        <input id="loginEmail" type="email" autocomplete="username">
+      </label>
+      <label class="label">
+        Contraseña
+        <input id="loginPass" type="password" autocomplete="current-password">
+      </label>
+      <button class="primary" onclick="doLogin()">Entrar</button>
+      <div class="hint" id="loginError"></div>
+    </div>
+  `;
+}
+
+function doLogin(){
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass = document.getElementById("loginPass").value;
+
+  auth.signInWithEmailAndPassword(email, pass)
+    .then(() => home())
+    .catch(e => {
+      document.getElementById("loginError").textContent =
+        "No se pudo entrar: " + e.message;
+    });
+}
+
+/* ---------- header knoppen ---------- */
+
+function addTap(){
+  if(currentScreen === "home"){
+    newClient();
+  } else if(currentScreen === "client"){
+    newConfeccion(window._openClientId);
+  }
+}
+
+function toggleSearch(){
+  searchOpen = !searchOpen;
+  document.getElementById("searchWrap").classList.toggle("hidden", !searchOpen);
+  if(searchOpen) document.getElementById("searchInput").focus();
+  else {
+    document.getElementById("searchInput").value = "";
+    renderHome();
+  }
+}
+
+/* ---------- pantalla: lista de clientes (grid) ---------- */
+
+function home(){
+  currentScreen = "home";
+  document.getElementById("searchBtn").classList.remove("hidden");
+  document.getElementById("addBtn").classList.toggle("hidden", !isAdmin);
+  renderHome();
+}
+
+function renderHome(){
+  title.textContent = "Control de Calidad";
+  subtitle.textContent = "Clientes";
+
+  const q = (document.getElementById("searchInput")?.value || "").toLowerCase();
+  const filtered = clients.filter(c => c.name.toLowerCase().includes(q));
+
+  const tiles = filtered.map(c => `
+    <div class="tile" onclick="openClient('${c.id}')">
+      ${isAdmin ? `
+        <span class="tilebtn-pencil" onclick="event.stopPropagation();uploadLogo('${c.id}')" title="Cambiar logo">✎</span>
+        <span class="tilebtn-trash" onclick="event.stopPropagation();deleteClient('${c.id}')" title="Borrar cliente">🗑</span>
+      ` : ""}
+      <div class="icon" style="background:${c.logo ? "transparent" : colorFor(c.id)}">
+        ${c.logo ? `<img src="${c.logo}">` : c.name.charAt(0).toUpperCase()}
+      </div>
+      <div class="name">${c.name}</div>
+    </div>
+  `).join("");
+
+  app.innerHTML = `
+    <div class="grid">
+      ${tiles || (q ? `<div class="empty">Sin resultados.</div>` : `<div class="empty">Todavía no hay clientes.</div>`)}
+      ${isAdmin ? `
+        <div class="tile add" onclick="newClient()">
+          <div class="icon">+</div>
+          <div class="name">Añadir cliente</div>
+        </div>
+      ` : ""}
+    </div>
+  `;
+}
+
+function deleteClient(id){
+  const c = clients.find(a => a.id === id);
+  if(confirm(`¿Borrar el cliente "${c.name}" y todas sus confecciones? Esta acción no se puede deshacer.`)){
+    db.collection("clients").doc(id).delete();
+  }
+}
+
+function uploadLogo(id){
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.onchange = () => {
+    const f = input.files[0];
+    if(!f) return;
+    const r = new FileReader();
+    r.onload = e => {
+      db.collection("clients").doc(id).update({ logo: e.target.result });
+    };
+    r.readAsDataURL(f);
+  };
+  input.click();
+}
+
+function newClient(){
+  currentScreen = "newClient";
+  document.getElementById("addBtn").classList.add("hidden");
+  document.getElementById("searchBtn").classList.add("hidden");
+
+  title.textContent = "Nuevo cliente";
+  subtitle.textContent = "Clientes";
+
+  app.innerHTML = `
+    <button class="back" onclick="home()">‹ Clientes</button>
+    <div class="card">
+      <label class="label">
+        Nombre del cliente
+        <input id="clientName" placeholder="p. ej. LIDL">
+      </label>
+      <button class="primary" onclick="saveNewClient()">Guardar</button>
+    </div>
+  `;
+  document.getElementById("clientName").focus();
+}
+
+function saveNewClient(){
+  const name = document.getElementById("clientName").value.trim();
+  if(!name) return;
+
+  db.collection("clients").add({ name, logo: null, confecciones: [] })
+    .then(ref => openClient(ref.id));
+}
+
+/* ---------- pantalla: confecciones de un cliente ---------- */
+
+function openClient(cid, silent){
+  currentScreen = "client";
+  window._openClientId = cid;
+  document.getElementById("searchBtn").classList.add("hidden");
+  document.getElementById("addBtn").classList.toggle("hidden", !isAdmin);
+
+  const c = clients.find(a => a.id === cid);
+  if(!c){ if(!silent) home(); return; }
+
+  title.textContent = c.name;
+  subtitle.textContent = "Confecciones";
+
+  const list = (c.confecciones || []).map(x => `
+    <div class="card choice" onclick="detail('${cid}','${x.id}')">
+      <h2>${x.name}</h2>
+      <div class="via">${x.via || ""}</div>
+      ${isAdmin ? `<span class="del" onclick="event.stopPropagation();deleteConfeccion('${cid}','${x.id}')">Borrar</span>` : ""}
+    </div>
+  `).join("");
+
+  app.innerHTML = `
+    <button class="back" onclick="home()">‹ Clientes</button>
+    ${list || `<div class="empty">Todavía no hay confecciones.</div>`}
+    ${isAdmin ? `<button class="primary" onclick="newConfeccion('${cid}')">+ Añadir confección</button>` : ""}
+  `;
+}
+
+function newConfeccion(cid){
+  currentScreen = "newConfeccion";
+  document.getElementById("addBtn").classList.add("hidden");
+
+  const c = clients.find(a => a.id === cid);
+
+  title.textContent = "Nueva confección";
+  subtitle.textContent = c.name;
+
+  app.innerHTML = `
+    <button class="back" onclick="openClient('${cid}')">‹ ${c.name}</button>
+    <div class="card">
+      <label class="label">
+        Nombre / formato
+        <input id="confName" placeholder="p. ej. 10 × 750 g">
+      </label>
+      <button class="primary" onclick="saveNewConfeccion('${cid}')">Guardar</button>
+    </div>
+  `;
+  document.getElementById("confName").focus();
+}
+
+function saveNewConfeccion(cid){
+  const c = clients.find(a => a.id === cid);
+  const name = document.getElementById("confName").value.trim();
+  if(!name) return;
+
+  const x = {
+    id: "c" + Date.now().toString(36),
+    name,
+    via:"", pale:"", caja:"", etiquetas:"", retirada:"", observaciones:"", extra:"",
+    photos:{}
+  };
+
+  const confecciones = [...(c.confecciones || []), x];
+  db.collection("clients").doc(cid).update({ confecciones })
+    .then(() => detail(cid, x.id));
+}
+
+function deleteConfeccion(cid, xid){
+  const c = clients.find(a => a.id === cid);
+  if(confirm("¿Borrar esta confección?")){
+    const confecciones = c.confecciones.filter(x => x.id !== xid);
+    db.collection("clients").doc(cid).update({ confecciones });
+  }
+}
+
+/* ---------- pantalla: detalle de una confección ---------- */
+
+function row(label, val, key, photosArr, cid, xid){
+  const p = photosArr || [];
+  const canEdit = isAdmin;
+
+  return `
+    <div
+      class="row ${canEdit ? "clickable" : ""}"
+      ${canEdit ? `onclick="editField('${cid}','${xid}','${key}')"` : ""}
+    >
+      <div class="label">${label}</div>
+      <div class="value">${val || "—"}</div>
+      ${
+        canEdit
+        ? `<div class="hint">
+             Toca para editar${p.length ? ` · ${p.length} foto(s)` : ""}
+           </div>`
+        : (p.length ? `<div class="hint">${p.length} foto(s)</div>` : "")
+      }
+    </div>
+  `;
+}
+
+function findConf(cid, xid){
+  const c = clients.find(a => a.id === cid);
+  const x = c.confecciones.find(a => a.id === xid);
+  return { c, x };
+}
+
+function detail(cid, xid, silent){
+  currentScreen = "detail";
+  window._openClientId = cid;
+  window._openConfId = xid;
+  document.getElementById("addBtn").classList.add("hidden");
+  document.getElementById("searchBtn").classList.add("hidden");
+
+  const c = clients.find(a => a.id === cid);
+  if(!c){ if(!silent) home(); return; }
+  const x = c.confecciones.find(a => a.id === xid);
+  if(!x){ if(!silent) openClient(cid); return; }
+
+  title.textContent = `${c.name} — ${x.name}`;
+  subtitle.textContent = x.via || "";
+
+  const photosOf = k => (x.photos || {})[k];
+
+  app.innerHTML = `
+    <button class="back" onclick="openClient('${cid}')">‹ ${c.name}</button>
+
+    <div class="card">
+      ${row("Palé", x.pale, "pale", null, cid, xid)}
+      ${row("Caja", x.caja, "caja", null, cid, xid)}
+      ${row("Etiquetas", x.etiquetas, "etiquetas", photosOf("etiquetas"), cid, xid)}
+      ${row("Retirada", x.retirada, "retirada", null, cid, xid)}
+      ${row("Observaciones", x.observaciones, "observaciones", photosOf("observaciones"), cid, xid)}
+
+      <div class="row ${isAdmin ? "clickable" : ""}" ${isAdmin ? `onclick="editField('${cid}','${xid}','extra')"` : ""}>
+        <div class="label">Más especificaciones</div>
+        <div class="value">${x.extra || (isAdmin ? "Añadir…" : "—")}</div>
+        ${isAdmin ? `<div class="hint">Toca para añadir texto o fotos</div>` : ""}
+      </div>
+    </div>
+  `;
+}
+
+function editField(cid, xid, key){
+  const { c, x } = findConf(cid, xid);
+  const photosOK = ["etiquetas","observaciones","extra"].includes(key);
+  const p = (x.photos || {})[key] || [];
+
+  const titles = {
+    pale:"Palé", caja:"Caja", etiquetas:"Etiquetas", retirada:"Retirada",
+    observaciones:"Observaciones", extra:"Más especificaciones"
+  };
+
+  currentScreen = "editField";
+  document.getElementById("addBtn").classList.add("hidden");
+
+  title.textContent = titles[key] || key;
+  subtitle.textContent = `${c.name} — ${x.name}`;
+
+  app.innerHTML = `
+    <button class="back" onclick="detail('${cid}','${xid}')">‹ Volver</button>
+
+    <div class="card">
+      <textarea id="field">${x[key] || ""}</textarea>
+      <button class="primary" onclick="saveField('${cid}','${xid}','${key}')">Guardar texto</button>
+
+      ${
+        photosOK
+        ? `
+          <div class="row">
+            <div class="label">Fotos</div>
+            <input id="photo" type="file" accept="image/*" capture="environment" multiple
+              onchange="addPhotos('${cid}','${xid}','${key}',this.files)">
+            <div class="note">Las fotos se guardan en la base de datos compartida.</div>
+            <div class="photos">
+              ${p.map((s,i) => `
+                <img src="${s}" onclick="removePhoto('${cid}','${xid}','${key}',${i})" title="Toca para borrar">
+              `).join("")}
+            </div>
+          </div>
+        `
+        : ""
+      }
+    </div>
+  `;
+}
+
+function saveField(cid, xid, key){
+  const { c, x } = findConf(cid, xid);
+  x[key] = document.getElementById("field").value;
+  db.collection("clients").doc(cid).update({ confecciones: c.confecciones })
+    .then(() => detail(cid, xid));
+}
+
+function addPhotos(cid, xid, key, files){
+  const { c, x } = findConf(cid, xid);
+  if(!x.photos) x.photos = {};
+  const arr = x.photos[key] || [];
+
+  const readers = [...files].map(f => new Promise(res => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.readAsDataURL(f);
+  }));
+
+  Promise.all(readers).then(results => {
+    x.photos[key] = [...arr, ...results];
+    db.collection("clients").doc(cid).update({ confecciones: c.confecciones })
+      .then(() => editField(cid, xid, key))
+      .catch(e => alert("Error al guardar fotos (puede que el documento sea demasiado grande): " + e.message));
+  });
+}
+
+function removePhoto(cid, xid, key, i){
+  if(!confirm("¿Borrar esta foto?")) return;
+  const { c, x } = findConf(cid, xid);
+  x.photos[key].splice(i, 1);
+  db.collection("clients").doc(cid).update({ confecciones: c.confecciones })
+    .then(() => editField(cid, xid, key));
+}
+
+/* ---------- boot ---------- */
+
+if(!fbReady){
+  notConfiguredScreen();
+} else {
+  auth.onAuthStateChanged(user => {
+    isAdmin = !!user;
+    document.getElementById("adminDot").classList.toggle("hidden", !isAdmin);
+    if(!unsub) startListening();
+    rerenderCurrent();
+    if(currentScreen === "home" || currentScreen === "login") home();
+  });
+}
+</script>
+
+</body>
+</html>
