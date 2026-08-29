@@ -389,7 +389,7 @@ textarea{
 
 <div id="photoViewer" class="hidden" style="position:fixed;inset:0;background:#000000e6;z-index:50;flex-direction:column;">
   <div style="display:flex;justify-content:flex-end;gap:10px;padding:14px;">
-    <button onclick="deleteViewedPhoto()" style="background:#b23b3b;color:white;border:0;border-radius:10px;padding:10px 16px;font-weight:700;">Borrar</button>
+    <button id="viewerDeleteBtn" onclick="deleteViewedPhoto()" style="background:#b23b3b;color:white;border:0;border-radius:10px;padding:10px 16px;font-weight:700;">Borrar</button>
     <button onclick="closePhotoViewer()" style="background:#ffffff22;color:white;border:0;border-radius:10px;padding:10px 16px;font-weight:700;">Cerrar</button>
   </div>
   <div style="flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;">
@@ -912,6 +912,7 @@ function viewPhoto(cid, xid, key, i){
   const src = (x.photos || {})[key][i];
   viewedPhoto = { cid, xid, key, i };
   document.getElementById("photoViewerImg").src = src;
+  document.getElementById("viewerDeleteBtn").classList.toggle("hidden", !isAdmin);
   document.getElementById("photoViewer").classList.remove("hidden");
 }
 
@@ -922,7 +923,7 @@ function closePhotoViewer(){
 }
 
 function deleteViewedPhoto(){
-  if(!viewedPhoto) return;
+  if(!viewedPhoto || !isAdmin) return;
   const { cid, xid, key, i } = viewedPhoto;
   closePhotoViewer();
   removePhoto(cid, xid, key, i);
