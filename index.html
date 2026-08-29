@@ -383,6 +383,16 @@ textarea{
 
 <main id="app"></main>
 
+<div id="photoViewer" class="hidden" style="position:fixed;inset:0;background:#000000e6;z-index:50;display:flex;flex-direction:column;">
+  <div style="display:flex;justify-content:flex-end;gap:10px;padding:14px;">
+    <button onclick="deleteViewedPhoto()" style="background:#b23b3b;color:white;border:0;border-radius:10px;padding:10px 16px;font-weight:700;">Borrar</button>
+    <button onclick="closePhotoViewer()" style="background:#ffffff22;color:white;border:0;border-radius:10px;padding:10px 16px;font-weight:700;">Cerrar</button>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;">
+    <img id="photoViewerImg" src="" style="max-width:100%;max-height:100%;object-fit:contain;">
+  </div>
+</div>
+
 <!-- Firebase SDK (compat, geen build-tools nodig) -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
@@ -695,7 +705,7 @@ function saveNewConfeccion(cid){
   const x = {
     id: "c" + Date.now().toString(36),
     name,
-    via:"", pale:"", caja:"", etiquetas:"", retirada:"", observaciones:"", extra:"",
+    via:"", pale:"", caja:"", etiquetas:"", retirada:"", lote:"", observaciones:"", extra:"",
     photos:{}
   };
 
@@ -767,6 +777,7 @@ function detail(cid, xid, silent){
       ${row("Caja", x.caja, "caja", null, cid, xid)}
       ${row("Etiquetas", x.etiquetas, "etiquetas", photosOf("etiquetas"), cid, xid)}
       ${row("Retirada", x.retirada, "retirada", null, cid, xid)}
+      ${row("Lote", x.lote, "lote", null, cid, xid)}
       ${row("Observaciones", x.observaciones, "observaciones", photosOf("observaciones"), cid, xid)}
 
       <div class="row ${isAdmin ? "clickable" : ""}" ${isAdmin ? `onclick="editField('${cid}','${xid}','extra')"` : ""}>
@@ -785,7 +796,7 @@ function editField(cid, xid, key){
 
   const titles = {
     pale:"Palé", caja:"Caja", etiquetas:"Etiquetas", retirada:"Retirada",
-    observaciones:"Observaciones", extra:"Más especificaciones"
+    lote:"Lote", observaciones:"Observaciones", extra:"Más especificaciones"
   };
 
   currentScreen = "editField";
@@ -806,12 +817,12 @@ function editField(cid, xid, key){
         ? `
           <div class="row">
             <div class="label">Fotos</div>
-            <input id="photo" type="file" accept="image/*" capture="environment" multiple
+            <input id="photo" type="file" accept="image/*" multiple
               onchange="addPhotos('${cid}','${xid}','${key}',this.files)">
-            <div class="note">Las fotos se guardan en la base de datos compartida.</div>
+            <div class="note">Puedes elegir hacer una foto o subir desde tu galería.</div>
             <div class="photos">
               ${p.map((s,i) => `
-                <img src="${s}" onclick="removePhoto('${cid}','${xid}','${key}',${i})" title="Toca para borrar">
+                <img src="${s}" onclick="viewPhoto('${cid}','${xid}','${key}',${i})" title="Toca para ver en grande">
               `).join("")}
             </div>
           </div>
@@ -829,23 +840,70 @@ function saveField(cid, xid, key){
     .then(() => detail(cid, xid));
 }
 
+function compressImage(file, maxDim, quality){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = e => { img.src = e.target.result; };
+    reader.onerror = reject;
+    img.onload = () => {
+      let { width, height } = img;
+      if(width > height && width > maxDim){
+        height = Math.round(height * (maxDim / width));
+        width = maxDim;
+      } else if(height > maxDim){
+        width = Math.round(width * (maxDim / height));
+        height = maxDim;
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 function addPhotos(cid, xid, key, files){
   const { c, x } = findConf(cid, xid);
   if(!x.photos) x.photos = {};
   const arr = x.photos[key] || [];
 
-  const readers = [...files].map(f => new Promise(res => {
-    const r = new FileReader();
-    r.onload = e => res(e.target.result);
-    r.readAsDataURL(f);
-  }));
+  const compressed = [...files].map(f => compressImage(f, 1000, 0.6));
 
-  Promise.all(readers).then(results => {
+  Promise.all(compressed).then(results => {
     x.photos[key] = [...arr, ...results];
     db.collection("clients").doc(cid).update({ confecciones: c.confecciones })
       .then(() => editField(cid, xid, key))
-      .catch(e => alert("Error al guardar fotos (puede que el documento sea demasiado grande): " + e.message));
+      .catch(e => alert("Error al guardar fotos (el documento puede haberse llenado; borra alguna foto antigua de esta ficha e inténtalo de nuevo): " + e.message));
+  }).catch(() => {
+    alert("No se pudo procesar la imagen. Prueba con otra foto.");
   });
+}
+
+let viewedPhoto = null;
+
+function viewPhoto(cid, xid, key, i){
+  const { x } = findConf(cid, xid);
+  const src = (x.photos || {})[key][i];
+  viewedPhoto = { cid, xid, key, i };
+  document.getElementById("photoViewerImg").src = src;
+  document.getElementById("photoViewer").classList.remove("hidden");
+}
+
+function closePhotoViewer(){
+  document.getElementById("photoViewer").classList.add("hidden");
+  document.getElementById("photoViewerImg").src = "";
+  viewedPhoto = null;
+}
+
+function deleteViewedPhoto(){
+  if(!viewedPhoto) return;
+  const { cid, xid, key, i } = viewedPhoto;
+  closePhotoViewer();
+  removePhoto(cid, xid, key, i);
 }
 
 function removePhoto(cid, xid, key, i){
