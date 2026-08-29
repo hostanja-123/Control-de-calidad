@@ -744,7 +744,16 @@ function row(label, val, key, photosArr, cid, xid){
         ? `<div class="hint">
              Toca para editar${p.length ? ` · ${p.length} foto(s)` : ""}
            </div>`
-        : (p.length ? `<div class="hint">${p.length} foto(s)</div>` : "")
+        : ""
+      }
+      ${
+        p.length
+        ? `<div class="photos" onclick="event.stopPropagation()">
+             ${p.map((s,i) => `
+               <img src="${s}" onclick="viewPhoto('${cid}','${xid}','${key}',${i})" title="Toca para ver en grande">
+             `).join("")}
+           </div>`
+        : ""
       }
     </div>
   `;
@@ -787,7 +796,16 @@ function detail(cid, xid, silent){
       <div class="row ${isAdmin ? "clickable" : ""}" ${isAdmin ? `onclick="editField('${cid}','${xid}','extra')"` : ""}>
         <div class="label">Más especificaciones</div>
         <div class="value">${x.extra || (isAdmin ? "Añadir…" : "—")}</div>
-        ${isAdmin ? `<div class="hint">Toca para añadir texto o fotos</div>` : ""}
+        ${isAdmin ? `<div class="hint">Toca para añadir texto o fotos${(photosOf("extra")||[]).length ? ` · ${(photosOf("extra")||[]).length} foto(s)` : ""}</div>` : ""}
+        ${
+          (photosOf("extra") || []).length
+          ? `<div class="photos" onclick="event.stopPropagation()">
+               ${photosOf("extra").map((s,i) => `
+                 <img src="${s}" onclick="viewPhoto('${cid}','${xid}','extra',${i})" title="Toca para ver en grande">
+               `).join("")}
+             </div>`
+          : ""
+        }
       </div>
     </div>
   `;
