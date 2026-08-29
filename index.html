@@ -612,11 +612,10 @@ function uploadLogo(id){
   input.onchange = () => {
     const f = input.files[0];
     if(!f) return;
-    const r = new FileReader();
-    r.onload = e => {
-      db.collection("clients").doc(id).update({ logo: e.target.result });
-    };
-    r.readAsDataURL(f);
+    compressImage(f, 500, 0.7).then(dataUrl => {
+      db.collection("clients").doc(id).update({ logo: dataUrl })
+        .catch(err => alert("No se pudo guardar el logo: " + err.message));
+    }).catch(() => alert("No se pudo procesar la imagen."));
   };
   input.click();
 }
