@@ -212,6 +212,7 @@ main{
 
 .choice h2{
   margin:0 0 5px;
+  padding-left:34px;
   font-size:21px;
 }
 
@@ -222,6 +223,14 @@ main{
   font-size:13px;
   font-weight:600;
   color:#b23b3b;
+}
+
+.choice .edit{
+  position:absolute;
+  top:14px;
+  left:16px;
+  font-size:17px;
+  color:#1f5a39;
 }
 
 .via{
@@ -667,6 +676,7 @@ function openClient(cid, silent){
     <div class="card choice" onclick="detail('${cid}','${x.id}')">
       <h2>${x.name}</h2>
       <div class="via">${x.via || ""}</div>
+      ${isAdmin ? `<span class="edit" onclick="event.stopPropagation();editConfeccionName('${cid}','${x.id}')" title="Editar nombre">✎</span>` : ""}
       ${isAdmin ? `<span class="del" onclick="event.stopPropagation();deleteConfeccion('${cid}','${x.id}')">Borrar</span>` : ""}
     </div>
   `).join("");
@@ -723,6 +733,36 @@ function deleteConfeccion(cid, xid){
     const confecciones = c.confecciones.filter(x => x.id !== xid);
     db.collection("clients").doc(cid).update({ confecciones });
   }
+}
+
+function editConfeccionName(cid, xid){
+  const { c, x } = findConf(cid, xid);
+  currentScreen = "editConfeccionName";
+  document.getElementById("addBtn").classList.add("hidden");
+
+  title.textContent = "Editar nombre";
+  subtitle.textContent = c.name;
+
+  app.innerHTML = `
+    <button class="back" onclick="openClient('${cid}')">‹ ${c.name}</button>
+    <div class="card">
+      <label class="label">
+        Nombre / formato
+        <input id="confName" value="${x.name.replace(/"/g,"&quot;")}">
+      </label>
+      <button class="primary" onclick="saveConfeccionName('${cid}','${xid}')">Guardar</button>
+    </div>
+  `;
+  document.getElementById("confName").focus();
+}
+
+function saveConfeccionName(cid, xid){
+  const { c, x } = findConf(cid, xid);
+  const name = document.getElementById("confName").value.trim();
+  if(!name) return;
+  x.name = name;
+  db.collection("clients").doc(cid).update({ confecciones: c.confecciones })
+    .then(() => openClient(cid));
 }
 
 /* ---------- pantalla: detalle de una confección ---------- */
