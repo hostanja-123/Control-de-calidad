@@ -445,10 +445,13 @@ try{
 
 /* ---------- estado ---------- */
 
+const ADMIN_EMAIL = "admin@calidad.com";
+
 const palette = ["#1f5a39","#b23b3b","#c98a1b","#2d5f8a","#6a4c93","#1f7a6c","#8a3b6a"];
 
 let clients = [];
 let isAdmin = false;
+let isLoggedIn = false;
 let searchOpen = false;
 let currentScreen = "home";
 let unsub = null;
@@ -496,7 +499,7 @@ function rerenderCurrent(){
   else if(currentScreen === "detail") detail(window._openClientId, window._openConfId, true);
 }
 
-/* ---------- admin login ---------- */
+/* ---------- login ---------- */
 
 function lockTap(){
   if(isAdmin){
@@ -505,19 +508,27 @@ function lockTap(){
     }
     return;
   }
-  loginScreen();
+  if(isLoggedIn){
+    if(confirm("Acceptar = iniciar sesión como administrador\nCancelar = cerrar sesión")){
+      loginScreen(true);
+    } else {
+      auth.signOut();
+    }
+    return;
+  }
+  loginScreen(true);
 }
 
-function loginScreen(){
+function loginScreen(allowBack){
   currentScreen = "login";
   document.getElementById("addBtn").classList.add("hidden");
   document.getElementById("searchBtn").classList.add("hidden");
 
-  title.textContent = "Acceso administrador";
-  subtitle.textContent = "";
+  title.textContent = "Control de Calidad";
+  subtitle.textContent = "Iniciar sesión";
 
   app.innerHTML = `
-    <button class="back" onclick="home()">‹ Volver</button>
+    ${allowBack ? `<button class="back" onclick="home()">‹ Volver</button>` : ""}
     <div class="card">
       <label class="label">
         Email
@@ -538,7 +549,6 @@ function doLogin(){
   const pass = document.getElementById("loginPass").value;
 
   auth.signInWithEmailAndPassword(email, pass)
-    .then(() => home())
     .catch(e => {
       document.getElementById("loginError").textContent =
         "No se pudo entrar: " + e.message;
@@ -604,7 +614,21 @@ function renderHome(){
         </div>
       ` : ""}
     </div>
+    ${isAdmin ? `<button class="secondary" style="margin-top:14px;" onclick="exportBackup()">⬇ Exportar copia de seguridad</button>` : ""}
   `;
+}
+
+function exportBackup(){
+  const data = JSON.stringify({ clients }, null, 2);
+  const blob = new Blob([data], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "control-de-calidad-backup.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function deleteClient(id){
@@ -982,11 +1006,23 @@ if(!fbReady){
   notConfiguredScreen();
 } else {
   auth.onAuthStateChanged(user => {
-    isAdmin = !!user;
+    isLoggedIn = !!user;
+    isAdmin = !!user && user.email === ADMIN_EMAIL;
     document.getElementById("adminDot").classList.toggle("hidden", !isAdmin);
+
+    if(!isLoggedIn){
+      clients = [];
+      if(unsub){ unsub(); unsub = null; }
+      loginScreen(false);
+      return;
+    }
+
     if(!unsub) startListening();
-    rerenderCurrent();
-    if(currentScreen === "home" || currentScreen === "login") home();
+    if(currentScreen === "login" || currentScreen === "home"){
+      home();
+    } else {
+      rerenderCurrent();
+    }
   });
 }
 </script>
